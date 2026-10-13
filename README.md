@@ -1,6 +1,7 @@
 # LocalLedger 🛡️
 
 **Private On-Device Invoice & Receipt Sorter for Freelancers and Tiny Agencies**
+   > Built October 13-18, 2026 for the [DEV Hacktoberfest Open-Source AI Challenge, Week 2 (Side Hustle)](https://dev.to/challenges/hacktoberfest-week2-2026-10-12)
 
 Drop in photos or PDFs of receipts and invoices. LocalLedger reads them directly on your machine and generates a clean, editable ledger with Vendor, Invoice Number, Date, GSTIN, GST (CGST+SGST/IGST), Total, and Category, ready to download as a tidy CSV or JSON for tax season.
 
