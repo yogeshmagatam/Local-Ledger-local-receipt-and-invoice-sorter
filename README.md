@@ -7,7 +7,7 @@ Drop in photos or PDFs of receipts and invoices. LocalLedger reads them directly
 
 > **100% On-Device Privacy:** Financial documents never leave your laptop. OCR runs inside your browser via WebAssembly (Tesseract.js & PDF.js), and local AI inference runs on your own machine through [Ollama](https://ollama.com). Zero telemetry, zero cloud uploads.
 
-Built for the **DEV Hacktoberfest Open-Source AI Challenge, Week 2 (Side Hustle Track)**.
+**DEV Hacktoberfest Open-Source AI Challenge, Week 2 (Side Hustle Track)**.
 
 ---
 
