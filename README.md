@@ -5,7 +5,7 @@
 
 Drop in photos or PDFs of receipts and invoices. LocalLedger reads them directly on your machine and generates a clean, editable ledger with Vendor, Invoice Number, Date, GSTIN, GST (CGST+SGST/IGST), Total, and Category, ready to download as a tidy CSV or JSON for tax season.
 
-> **100% On-Device Privacy Guarantee:** Financial documents never leave your laptop. OCR runs inside your browser via WebAssembly (Tesseract.js & PDF.js), and local AI inference runs on your own machine through [Ollama](https://ollama.com). Zero telemetry, zero cloud uploads.
+> **100% On-Device Privacy:** Financial documents never leave your laptop. OCR runs inside your browser via WebAssembly (Tesseract.js & PDF.js), and local AI inference runs on your own machine through [Ollama](https://ollama.com). Zero telemetry, zero cloud uploads.
 
 Built for the **DEV Hacktoberfest Open-Source AI Challenge, Week 2 (Side Hustle Track)**.
 
