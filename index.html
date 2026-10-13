@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LocalLedger — Private On-Device Invoice & Receipt Sorter for Freelancers</title>
+  <meta name="description" content="100% private in-browser OCR and local Ollama AI receipt sorter. Extract vendor, date, GSTIN, GST, and totals without financial documents ever leaving your laptop.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-icon" title="LocalLedger Shield">
+          <span>🛡️</span>
+        </div>
+        <div class="brand-title">
+          <h1>
+            LocalLedger
+            <span class="brand-badge">100% Local & Private</span>
+          </h1>
+          <p class="brand-tagline">On-device invoice and receipt sorter for tax season. No cloud uploads.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-pill" id="statusPill" title="Click to view Ollama configuration">
+          <span class="status-dot" id="dot"></span>
+          <span id="statusText">Checking local AI…</span>
+        </div>
+
+        <button class="header-btn" id="themeToggle" title="Toggle Dark / Light Theme" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+
+        <button class="header-btn" id="btnSettings" title="Configure Ollama model & settings">
+          ⚙️ Settings
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Body -->
+  <main class="app-main">
+    <!-- Dropzone & Quick Start -->
+    <section class="card-panel dropzone-container">
+      <div id="drop" class="dropzone" tabindex="0" role="button" aria-label="Drop receipts and invoices here or click to upload">
+        <div class="dropzone-icon">📄</div>
+        <div class="dropzone-title">Drop invoices & receipts here, or click to browse</div>
+        <div class="dropzone-subtitle">
+          Supports multi-page PDFs, PNG, JPG, and WEBP. Processed entirely in your browser memory.
+        </div>
+        <div class="file-types-tag">
+          <span class="badge-tag">PDF</span>
+          <span class="badge-tag">PNG</span>
+          <span class="badge-tag">JPG</span>
+          <span class="badge-tag">WEBP</span>
+        </div>
+        <input id="file" type="file" accept="image/*,application/pdf" multiple hidden>
+      </div>
+
+      <div class="quick-side-box">
+        <div>
+          <div class="quick-title">
+            <span>⚡ Instant Demo</span>
+          </div>
+          <p class="quick-desc" style="margin-top: 6px;">
+            Test the on-device OCR and Ollama verification without looking for receipts.
+          </p>
+        </div>
+
+        <button id="btnSampleInvoices" class="btn-sample" title="Load sample Swiggy, Uber, and Hardware receipts">
+          <span>✨ Load 3 Sample Invoices</span>
+        </button>
+
+        <div class="privacy-notice">
+          <span>🔒 Zero telemetry • Documents never leave laptop</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Financial Summary Metric Cards -->
+    <section class="stats-grid" id="statsGrid">
+      <div class="stat-card emerald">
+        <div class="stat-header">
+          <span class="stat-label">Total Spend</span>
+          <span class="stat-icon">💰</span>
+        </div>
+        <div class="stat-value" id="statTotalSpend">₹0.00</div>
+        <div class="stat-subtext" id="statSubtextSpend">From 0 completed documents</div>
+      </div>
+
+      <div class="stat-card amber">
+        <div class="stat-header">
+          <span class="stat-label">Claimable GST (ITC)</span>
+          <span class="stat-icon">🏷️</span>
+        </div>
+        <div class="stat-value" id="statTotalGST">₹0.00</div>
+        <div class="stat-subtext">Input Tax Credit across all vouchers</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">Total Documents</span>
+          <span class="stat-icon">📑</span>
+        </div>
+        <div class="stat-value" id="statDocCount">0</div>
+        <div class="stat-subtext" id="statStatusBreakdown">0 queued • 0 done</div>
+      </div>
+
+      <div class="stat-card" id="statReviewCard">
+        <div class="stat-header">
+          <span class="stat-label">Review Needed</span>
+          <span class="stat-icon">⚠️</span>
+        </div>
+        <div class="stat-value" id="statAttentionCount">0</div>
+        <div class="stat-subtext">Rows with missing date or total</div>
+      </div>
+    </section>
+
+    <!-- Category Spending Pills -->
+    <section class="category-pills-bar" id="categoryPillsBar">
+      <span class="category-pills-label">Category Breakdown:</span>
+      <span class="muted" id="categoryEmpty">No categorized expenses yet.</span>
+    </section>
+
+    <!-- Ledger Table Panel -->
+    <section class="card-panel">
+      <div class="table-toolbar">
+        <div class="toolbar-search-group">
+          <input type="text" id="searchDocs" class="search-input" placeholder="🔍 Search vendor, invoice #, or file…">
+          <select id="filterCategory" class="filter-select">
+            <option value="">All Categories</option>
+          </select>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; color: var(--text-muted);">
+            <input type="checkbox" id="filterWarnings">
+            <span>Needs review only</span>
+          </label>
+        </div>
+
+        <div class="toolbar-actions">
+          <button id="btnCSV" class="btn-primary" disabled title="Download tidy Excel/CSV spreadsheet">
+            📥 Download CSV
+          </button>
+          <button id="btnJSON" class="btn-secondary" disabled title="Export JSON ledger data">
+            📋 Export JSON
+          </button>
+          <button id="btnClear" class="btn-secondary" disabled title="Clear all receipts">
+            🗑️ Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive-wrapper">
+        <table id="table" class="ledger-table">
+          <thead>
+            <tr>
+              <th style="width: 170px;">Document</th>
+              <th>Vendor / Merchant</th>
+              <th style="width: 130px;">Invoice #</th>
+              <th style="width: 130px;">Date</th>
+              <th style="width: 150px;">GSTIN</th>
+              <th style="width: 100px; text-align: right;">GST (₹)</th>
+              <th style="width: 110px; text-align: right;">Total (₹)</th>
+              <th style="width: 150px;">Category</th>
+              <th style="width: 110px;">Method</th>
+              <th style="width: 70px; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+
+        <div class="empty-state-wrap" id="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">No receipts or invoices imported yet</div>
+          <div class="empty-subtitle">
+            Drag and drop bills onto the dropzone above, or click "Load 3 Sample Invoices" to test the privacy-first pipeline right now.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="modalSettings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="settingsTitle">⚙️ Local AI & Ollama Configuration</h2>
+        <button class="btn-close" id="btnCloseSettings" aria-label="Close settings">×</button>
+      </div>
+      <div class="settings-group">
+        <label class="form-label">
+          Ollama Service Address
+          <span class="desc">Where your local Ollama server is listening (default: http://localhost:11434)</span>
+          <input type="text" id="host" class="form-input" value="http://localhost:11434">
+        </label>
+
+        <label class="form-label">
+          Ollama Model
+          <span class="desc">Selected model for structured financial JSON extraction</span>
+          <div style="display: flex; gap: 8px;">
+            <select id="modelSelect" class="form-input" style="flex: 1;">
+              <option value="qwen2.5:1.5b">qwen2.5:1.5b (Recommended ~1 GB)</option>
+            </select>
+            <button id="btnRefreshModels" class="btn-secondary" type="button" title="Query Ollama /api/tags for installed models">
+              🔄 Refresh
+            </button>
+          </div>
+        </label>
+
+        <label class="form-label" style="flex-direction: row; align-items: center; gap: 10px; cursor: pointer;">
+          <input type="checkbox" id="useLLM" checked style="width: 18px; height: 18px;">
+          <div>
+            <div>Use Local AI (Ollama) to refine OCR text</div>
+            <span class="desc">When enabled, Ollama refines fields and validates that amounts appear in raw text. If disabled, rule-based Regex is used exclusively.</span>
+          </div>
+        </label>
+
+        <div style="margin-top: 10px;">
+          <h4 style="font-size: 13px; margin-bottom: 6px;">How to enable Browser CORS in Ollama:</h4>
+          <p class="muted" style="font-size: 12px; margin-bottom: 8px;">
+            To allow LocalLedger in your browser to query Ollama at localhost, set the origin header once:
+          </p>
+          <div class="code-block">
+# Windows (PowerShell):
+setx OLLAMA_ORIGINS "*"
+# Then restart Ollama from tray or terminal
+
+# macOS / Linux:
+OLLAMA_ORIGINS="*" ollama serve
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Preview Modal -->
+  <div class="modal-overlay" id="modalPreview" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+    <div class="modal-content" style="max-width: 880px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="previewTitle">🔍 Document Verification</h2>
+        <button class="btn-close" id="btnClosePreview" aria-label="Close preview">×</button>
+      </div>
+      <div class="preview-body">
+        <div class="preview-media-pane" id="previewMedia">
+          <!-- Rendered document image or PDF canvas -->
+        </div>
+        <div class="preview-data-pane" id="previewData">
+          <!-- Live verified extraction metadata -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div>
+      <strong>LocalLedger</strong> — Built for DEV Hacktoberfest Open-Source AI Challenge (Side Hustle Track).
+    </div>
+    <div class="footer-links">
+      <span>Tesseract.js WASM OCR</span>
+      <span>•</span>
+      <span>Local Ollama Qwen2.5</span>
+      <span>•</span>
+      <span>100% On-Device Privacy</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="extract.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
